@@ -1,0 +1,6 @@
+numpy>=1.26
+pandas>=2.2
+scipy>=1.13
+scikit-learn>=1.5
+# only for the Rao / Chokoisky / Frawley engines (astro_engines.py, astro_backtest.py, predict --astro-engines)
+pyswisseph>=2.10

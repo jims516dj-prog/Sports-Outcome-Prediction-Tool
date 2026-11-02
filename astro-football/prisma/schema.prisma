@@ -1,0 +1,175 @@
+// Astrological Football Match Analyzer - database schema (spec section 11.1)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  displayName   String
+  nationOrClub  String // "nation" | "club" | "franchise"
+  foundingDate  DateTime?
+  foundingTime  String? // HH:MM in founding-place local time
+  foundingPlace String?
+  foundingLat   Float?
+  foundingLong  Float?
+  foundingTz    String? // IANA zone of the founding place (for local -> UT)
+  defaultVenue  String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  matchesAsA    Match[]   @relation("MatchTeamA")
+  matchesAsB    Match[]   @relation("MatchTeamB")
+}
+
+model Venue {
+  id               String    @id @default(cuid())
+  name             String    @unique
+  canonicalName    String?
+  lat              Float
+  long             Float
+  timezone         String?
+  coordinateSource String // "wikipedia" | "openstreetmap" | "manual" | "seed"
+  lastVerifiedAt   DateTime?
+  wikipediaPageId  Int?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  matches          Match[]
+}
+
+model WikiAlias {
+  id        String @id @default(cuid())
+  venueName String @unique
+  wikiTitle String
+}
+
+model Match {
+  id               String   @id @default(cuid())
+  sport            String // "football" | "american_football" | "cricket" | ...
+  context          String // "league" | "knockout" | "final" | "friendly"
+  kickoffGMT       DateTime
+  kickoffLocal     String // local wall-clock time at the venue, ISO without offset
+  timezone         String?
+  teamAId          String
+  teamA            Team     @relation("MatchTeamA", fields: [teamAId], references: [id])
+  teamBId          String
+  teamB            Team     @relation("MatchTeamB", fields: [teamBId], references: [id])
+  venueId          String
+  venue            Venue    @relation(fields: [venueId], references: [id])
+  oddsA            Float
+  oddsB            Float
+  oddsDraw         Float?
+
+  captainAJersey   Int?
+  captainBJersey   Int?
+  teamAJerseyColor String?
+  teamBJerseyColor String?
+
+  scoreA           Int?
+  scoreB           Int?
+  status           String   @default("pending") // pending | completed | abandoned | walkover | no_result | dl_method
+  notes            String?
+
+  postHocAnalysis  Boolean  @default(false)
+  hasCaptainData   Boolean  @default(false)
+  staleAnalysis    Boolean  @default(false)
+  deleted          Boolean  @default(false)
+
+  chartD1Rao       Json?
+  chartD1Chokoisky Json?
+  chartD9Chokoisky Json?
+  chartD1Frawley   Json?
+
+  verdictRao       Json?
+  verdictChokoisky Json?
+  verdictFrawley   Json?
+  synthesis        Json?
+
+  mlFeatures             Json?
+  mlPatternMatches       Json?
+  mlConfidenceMultiplier Float?
+
+  analysisVersions Json? // [{ timestamp, reason, verdicts, synthesis }]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  audits             EditAudit[]
+  combinationMatches MLCombinationMatch[]
+
+  @@index([kickoffGMT])
+  @@index([status])
+  @@index([teamAId, teamBId])
+}
+
+model MLModelVersion {
+  id                String          @id @default(cuid())
+  versionNumber     Int             @unique
+  trainedAt         DateTime        @default(now())
+  overallAccuracy   Float
+  engineAccuracies  Json // { rao, chokoisky, frawley, favourite_baseline }
+  engineWeights     Json // weights used by the synthesis layer
+  metrics           Json? // holdout + time-window metrics
+  combinationCount  Int
+  sampleSize        Int
+  isCurrent         Boolean         @default(false)
+  modelArtifactPath String?
+  combinations      MLCombination[]
+}
+
+model MLCombination {
+  id              String               @id @default(cuid())
+  modelVersionId  String
+  modelVersion    MLModelVersion       @relation(fields: [modelVersionId], references: [id], onDelete: Cascade)
+  description     String
+  featureKeys     String[]
+  featureValues   Json
+  sampleSize      Int
+  correctCount    Int
+  accuracy        Float
+  weight          Float                @default(1.0)
+  pValue          Float?
+  favouriteBaseline Float? // accuracy of "pick the favourite" in the same matches
+  holdoutAccuracy Float? // accuracy on the most recent 30% (not used to discover it)
+  holdoutSize     Int?
+  trend           String? // "up" | "down" | "flat" vs previous version
+  engineScope     String?
+  discoveredAt    DateTime             @default(now())
+  lastTrainedAt   DateTime             @updatedAt
+  active          Boolean              @default(true)
+  matches         MLCombinationMatch[]
+}
+
+model MLCombinationMatch {
+  id            String        @id @default(cuid())
+  combinationId String
+  combination   MLCombination @relation(fields: [combinationId], references: [id], onDelete: Cascade)
+  matchId       String
+  match         Match         @relation(fields: [matchId], references: [id])
+  predicted     String // "A" | "B" | "draw"
+  actual        String
+  correct       Boolean
+
+  @@unique([combinationId, matchId])
+}
+
+model EditAudit {
+  id        String   @id @default(cuid())
+  matchId   String
+  fieldName String
+  oldValue  String?
+  newValue  String?
+  editedAt  DateTime @default(now())
+  editedBy  String?
+  match     Match    @relation(fields: [matchId], references: [id])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

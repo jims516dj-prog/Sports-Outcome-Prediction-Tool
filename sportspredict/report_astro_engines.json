@@ -1,0 +1,227 @@
+{
+  "n_matches": 23701,
+  "period": [
+    "2010-08-14",
+    "2025-05-25"
+  ],
+  "A_raw_accuracy": {
+    "always_pick_favourite": 0.5256449834619625,
+    "rao": 0.340154355016538,
+    "chokoisky": 0.3287320837927233,
+    "frawley (when enabled)": 0.40243376610932785,
+    "consensus": 0.3626019845644983,
+    "consensus_all3_agree": 0.34469914040114613,
+    "share_all3_agree": 0.15391400220507168,
+    "outcome_shares": {
+      "fav": 0.5256449834619625,
+      "draw": 0.249393605292172,
+      "und": 0.2249614112458655
+    },
+    "rao_verdict_pick_shares": {
+      "fav": 0.36904079382579935,
+      "draw": 0.08762954796030871,
+      "und": 0.5433296582138919,
+      "disabled": 0.0
+    },
+    "chok_verdict_pick_shares": {
+      "fav": 0.34112458654906286,
+      "draw": 0.14363836824696802,
+      "und": 0.5152370452039692,
+      "disabled": 0.0
+    },
+    "fraw_verdict_pick_shares": {
+      "fav": 0.5276295479603087,
+      "draw": 0.05878721058434399,
+      "und": 0.3341124586549063,
+      "disabled": 0.07947078280044101
+    },
+    "consensus_pick_shares": {
+      "fav": 0.44952590959206173,
+      "draw": 0.05278941565600882,
+      "und": 0.49768467475192946,
+      "disabled": 0.0
+    }
+  },
+  "C_match_result": {
+    "n": 22675,
+    "acc_stats": 0.5264829106945976,
+    "acc_stats_plus_astro": 0.5233076074972437,
+    "logloss_stats": 0.984879341231939,
+    "logloss_plus_astro": 0.98900565978138,
+    "logloss_change (neg=better)": 0.004126318549441114,
+    "ci95": [
+      0.002842015184701563,
+      0.005344016945503581
+    ],
+    "acc_top30pct_stats": 0.6902381652455161,
+    "acc_top30pct_plus_astro": 0.6911202587474272,
+    "permutation_p": 0.9523809523809523,
+    "n_perm": 20
+  },
+  "C_over_under_2.5": {
+    "n": 22675,
+    "acc_stats": 0.5615435501653804,
+    "acc_stats_plus_astro": 0.5581918412348401,
+    "logloss_stats": 0.6812385122001553,
+    "logloss_plus_astro": 0.6823073256931851,
+    "logloss_change (neg=better)": 0.0010688134930298607,
+    "ci95": [
+      0.0004562081954781536,
+      0.001685105234535064
+    ],
+    "acc_top30pct_stats": 0.619523669508968,
+    "acc_top30pct_plus_astro": 0.6136430461628932,
+    "permutation_p": 0.6190476190476191,
+    "n_perm": 20
+  },
+  "E_engines_only_model_accuracy": 0.4612568908489526,
+  "E_majority_class": 0.444851157662624,
+  "B_calibration": {
+    "rao_verdict:und": {
+      "n": 12320,
+      "actual_rate": 0.22589285714285715,
+      "model_expected": 0.22238107373434263,
+      "excess": 0.0035117834085145183,
+      "p_value": 0.3515357838361381
+    },
+    "rao_verdict:draw": {
+      "n": 1987,
+      "actual_rate": 0.26874685455460495,
+      "model_expected": 0.24743583860388263,
+      "excess": 0.021311015950722323,
+      "p_value": 0.028979276604753842
+    },
+    "rao_verdict:fav": {
+      "n": 8368,
+      "actual_rate": 0.5253346080305927,
+      "model_expected": 0.5299451816232502,
+      "excess": -0.004610573592657485,
+      "p_value": 0.3991035025856233
+    },
+    "chok_verdict:und": {
+      "n": 11683,
+      "actual_rate": 0.22237439013951896,
+      "model_expected": 0.22386205568554224,
+      "excess": -0.0014876655460232813,
+      "p_value": 0.7059426202879997
+    },
+    "chok_verdict:draw": {
+      "n": 3257,
+      "actual_rate": 0.23979121891311023,
+      "model_expected": 0.247420539881918,
+      "excess": -0.007629320968807779,
+      "p_value": 0.31982441817588436
+    },
+    "chok_verdict:fav": {
+      "n": 7735,
+      "actual_rate": 0.5268261150614092,
+      "model_expected": 0.5334653892188593,
+      "excess": -0.006639274157450137,
+      "p_value": 0.24508466309350851
+    },
+    "fraw_verdict:und": {
+      "n": 7576,
+      "actual_rate": 0.21673706441393875,
+      "model_expected": 0.21269618207896737,
+      "excess": 0.00404088233497138,
+      "p_value": 0.3918239194979799
+    },
+    "fraw_verdict:draw": {
+      "n": 1333,
+      "actual_rate": 0.231807951987997,
+      "model_expected": 0.24276126147448746,
+      "excess": -0.010953309486490453,
+      "p_value": 0.37110015148889686
+    },
+    "fraw_verdict:fav": {
+      "n": 11964,
+      "actual_rate": 0.5390337679705784,
+      "model_expected": 0.5451096898244774,
+      "excess": -0.006075921853898936,
+      "p_value": 0.18316602322015385
+    },
+    "consensus:und": {
+      "n": 11285,
+      "actual_rate": 0.225254762959681,
+      "model_expected": 0.22410740957024133,
+      "excess": 0.0011473533894396648,
+      "p_value": 0.7691661392577805
+    },
+    "consensus:draw": {
+      "n": 1197,
+      "actual_rate": 0.25647451963241436,
+      "model_expected": 0.2505372722471104,
+      "excess": 0.005937247385303934,
+      "p_value": 0.6405648720165524
+    },
+    "consensus:fav": {
+      "n": 10193,
+      "actual_rate": 0.5271264593348376,
+      "model_expected": 0.5337797833479132,
+      "excess": -0.006653324013075612,
+      "p_value": 0.18017331194826863
+    }
+  },
+  "D_combination_mining": [
+    {
+      "season": 2012,
+      "combos": 0
+    },
+    {
+      "season": 2013,
+      "combos": 0
+    },
+    {
+      "season": 2014,
+      "combos": 0
+    },
+    {
+      "season": 2015,
+      "combos": 0
+    },
+    {
+      "season": 2016,
+      "combos": 0
+    },
+    {
+      "season": 2017,
+      "combos": 0
+    },
+    {
+      "season": 2018,
+      "combos": 0
+    },
+    {
+      "season": 2019,
+      "combos": 0
+    },
+    {
+      "season": 2020,
+      "combos": 0
+    },
+    {
+      "season": 2021,
+      "combos": 0
+    },
+    {
+      "season": 2022,
+      "combos": 0
+    },
+    {
+      "season": 2023,
+      "combos": 1,
+      "train_acc_mean": 0.7619047619047619,
+      "test_matches_flagged": 2,
+      "test_consensus_acc": 1.0,
+      "test_pick_favourite_acc_same_matches": 0.5
+    },
+    {
+      "season": 2024,
+      "combos": 1,
+      "train_acc_mean": 0.782608695652174,
+      "test_matches_flagged": 3,
+      "test_consensus_acc": 0.3333333333333333,
+      "test_pick_favourite_acc_same_matches": 0.3333333333333333
+    }
+  ]
+}

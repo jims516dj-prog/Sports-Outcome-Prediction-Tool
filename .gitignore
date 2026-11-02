@@ -1,0 +1,8 @@
+# downloaded datasets (re-create with scripts/fetch_data.sh)
+data/
+# python
+__pycache__/
+*.pyc
+.venv/
+# generated
+sportspredict/report_hockey*.json
