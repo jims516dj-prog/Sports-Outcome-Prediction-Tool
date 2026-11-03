@@ -48,35 +48,72 @@ astro-football/
 
 ## Setup
 
-Requirements: Node 20+, Python 3.11+, PostgreSQL 14+.
+Requirements: Node 20+, Python 3.11 (the `pyswisseph` installers stop at 3.11; newer
+versions need a C compiler), PostgreSQL 14+.
+
+Create the database user and database that `.env.example` points to. Use your Postgres admin
+login: `postgres` on most installs, your own username with Homebrew on macOS.
+
+```bash
+psql -U postgres -c "CREATE USER astro WITH PASSWORD 'astro' CREATEDB;"
+```
+
+```bash
+psql -U postgres -c "CREATE DATABASE astro_football OWNER astro;"
+```
+
+Install the web app and create the tables (on Windows, `copy` instead of `cp`):
 
 ```bash
 npm install
 ```
 
 ```bash
-cp .env.example .env    # adjust DATABASE_URL if needed
+cp .env.example .env
 ```
 
 ```bash
-createdb astro_football && npx prisma db push && npm run db:seed
+npx prisma db push && npm run db:seed
+```
+
+Install the Python service into `.venv` (on Windows:
+`.venv\Scripts\pip install -r services\python-astro\requirements.txt`):
+
+```bash
+python3.11 -m venv .venv
 ```
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -r services/python-astro/requirements.txt
+.venv/bin/pip install -r services/python-astro/requirements.txt
 ```
 
 Ephemeris files (`sepl_18.se1`, `semo_18.se1`, `seas_18.se1`, `sefstars.txt`) live in
 `services/python-astro/ephe/` (set `SE_EPHE_PATH` to move them). They are needed for Chiron,
 Ceres and the fixed stars; the planets fall back to the built-in Moshier ephemeris.
 
-Run both services:
+### Run
+
+macOS / Linux, both services with one command (uses `.venv` automatically; Ctrl+C stops both):
 
 ```bash
-PYTHON=.venv/bin/python npm run dev:all
+npm run dev:all
 ```
 
-Then open http://localhost:3000. The Python service listens on port 8001 (`ASTRO_SERVICE_URL`).
+Windows, or to run them separately, use two terminals. First the Python service
+(on Windows, `..\..\.venv\Scripts\python` instead):
+
+```bash
+cd services/python-astro && ../../.venv/bin/python -m uvicorn main:app --port 8001
+```
+
+Then the website, from the `astro-football` folder:
+
+```bash
+npm run dev
+```
+
+Open http://localhost:3000. The dashboard shows "Astrology service: online" when both are
+running. The Python service listens on port 8001 (`ASTRO_SERVICE_URL`).
 
 ### Importing history (optional)
 
