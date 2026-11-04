@@ -9,12 +9,16 @@ import { api, fmtDate, isAdminMode } from "@/lib/client";
 
 type Row = {
   id: string; kickoffGMT: string; teamA: string; teamB: string; scoreA: number | null; scoreB: number | null; status: string;
-  sport: string; venue: string; predicted: string | null; actual: string | null; agreement: number | null; pattern: string | null;
+  sport: string; league: string | null; venue: string; predicted: string | null; actual: string | null; agreement: number | null; pattern: string | null;
   mlCount: number; notes: string | null; hasCaptainData: boolean; postHoc: boolean; stale: boolean; deleted: boolean; confidence: number | null;
 };
 const ch = createColumnHelper<Row>();
+const LEAGUES: Record<string, string> = {
+  "en.1": "Premier League", "de.1": "Bundesliga", "es.1": "La Liga", "it.1": "Serie A", "fr.1": "Ligue 1",
+  "en.2": "Championship", "nl.1": "Eredivisie", "pt.1": "Primeira Liga",
+};
 const winnerName = (r: Row, s: string | null) => (s === "A" ? r.teamA : s === "B" ? r.teamB : s === "draw" ? "Draw" : "—");
-const FILTERS = ["q", "from", "to", "sport", "status", "agreement", "correct", "mlPattern", "captain", "showDeleted"] as const;
+const FILTERS = ["q", "from", "to", "sport", "league", "status", "agreement", "correct", "mlPattern", "captain", "showDeleted"] as const;
 
 export function DatasetTable() {
   const router = useRouter();
@@ -64,7 +68,7 @@ export function DatasetTable() {
     ch.accessor("teamB", { id: "teamB", header: "Team B" }),
     ch.display({ id: "score", header: "Scoreline", cell: (c) => c.row.original.scoreA == null ? <Badge tone="amber">Pending</Badge> : <span className="num">{c.row.original.scoreA}–{c.row.original.scoreB}</span> }),
     ch.accessor("status", { id: "status", header: "Status", cell: (c) => <span className="text-xs flex flex-wrap gap-1 items-center">{c.getValue()}{c.row.original.postHoc ? <Badge tone="slate">post-hoc</Badge> : null}{c.row.original.stale ? <Badge tone="red">stale</Badge> : null}{c.row.original.deleted ? <Badge tone="red">deleted</Badge> : null}</span> }),
-    ch.accessor("sport", { id: "sport", header: "Sport", enableSorting: false, cell: (c) => <span className="text-xs">{c.getValue()}</span> }),
+    ch.accessor("league", { id: "league", header: "League", enableSorting: false, cell: (c) => <span className="text-xs">{LEAGUES[c.getValue() ?? ""] ?? c.row.original.sport}</span> }),
     ch.accessor("venue", { id: "venue", header: "Venue", cell: (c) => <span className="text-xs">{c.getValue()}</span> }),
     ch.display({ id: "predicted", header: "Predicted", cell: (c) => <span className="font-medium">{winnerName(c.row.original, c.row.original.predicted)}</span> }),
     ch.display({ id: "actual", header: "Actual", cell: (c) => winnerName(c.row.original, c.row.original.actual) }),
@@ -108,11 +112,12 @@ export function DatasetTable() {
         </div>
       </div>
       <Card className="p-3 mb-4">
-        <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10 gap-2 items-end">
+        <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-12 gap-2 items-end">
           <Field label="Search" className="col-span-2"><Input placeholder="team or venue" value={filters.q ?? ""} onChange={(e) => setFilter("q", e.target.value)} /></Field>
           <Field label="From"><Input type="date" value={filters.from ?? ""} onChange={(e) => setFilter("from", e.target.value)} /></Field>
           <Field label="To"><Input type="date" value={filters.to ?? ""} onChange={(e) => setFilter("to", e.target.value)} /></Field>
           <Field label="Sport"><Select value={filters.sport ?? ""} onChange={(e) => setFilter("sport", e.target.value)}><option value="">all</option><option value="football">football</option><option value="american_football">american football</option><option value="cricket">cricket</option><option value="tennis">tennis</option><option value="basketball">basketball</option><option value="ice_hockey">ice hockey</option></Select></Field>
+          <Field label="League"><Select value={filters.league ?? ""} onChange={(e) => setFilter("league", e.target.value)}><option value="">all</option>{Object.entries(LEAGUES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}<option value="none">entered by hand</option></Select></Field>
           <Field label="Status"><Select value={filters.status ?? ""} onChange={(e) => setFilter("status", e.target.value)}><option value="">all</option><option value="pending">pending</option><option value="completed">completed</option><option value="abandoned">abandoned</option><option value="walkover">walkover</option><option value="no_result">no result</option><option value="dl_method">D/L</option></Select></Field>
           <Field label="Engines"><Select value={filters.agreement ?? ""} onChange={(e) => setFilter("agreement", e.target.value)}><option value="">any</option><option value="all3">all 3 agree</option><option value="two">2 of 3</option><option value="none">all disagree</option></Select></Field>
           <Field label="Prediction"><Select value={filters.correct ?? ""} onChange={(e) => setFilter("correct", e.target.value)}><option value="">any</option><option value="correct">correct</option><option value="incorrect">incorrect</option><option value="pending">pending</option></Select></Field>

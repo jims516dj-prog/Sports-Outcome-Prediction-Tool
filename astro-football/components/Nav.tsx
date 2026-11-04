@@ -6,6 +6,7 @@ const LINKS = [
   ["/", "Dashboard"],
   ["/analyze", "Analyze"],
   ["/dataset", "Historical Dataset"],
+  ["/sync", "Data sync"],
   ["/ml", "ML Training"],
   ["/settings", "Settings"],
 ] as const;

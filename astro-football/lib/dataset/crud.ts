@@ -20,6 +20,7 @@ export type MatchInput = {
   hasCaptainData?: boolean; captainAJersey?: number | null; captainBJersey?: number | null;
   teamAJerseyColor?: string | null; teamBJerseyColor?: string | null;
   scoreA?: number | null; scoreB?: number | null; status?: string; notes?: string | null;
+  externalId?: string | null; league?: string | null; source?: string | null;
 };
 
 export const INCLUDE = { teamA: true, teamB: true, venue: true } as const;
@@ -96,6 +97,9 @@ export async function createMatch(i: MatchInput, opts: { historical: boolean }) 
       status: opts.historical ? (i.status || (scored ? "completed" : "pending")) : "pending",
       notes: i.notes ?? null,
       postHocAnalysis: opts.historical,
+      externalId: i.externalId ?? null,
+      league: i.league ?? null,
+      source: i.source ?? null,
     },
     include: INCLUDE,
   });

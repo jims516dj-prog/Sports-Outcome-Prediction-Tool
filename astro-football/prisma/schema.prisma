@@ -75,6 +75,11 @@ model Match {
   status           String   @default("pending") // pending | completed | abandoned | walkover | no_result | dl_method
   notes            String?
 
+  // data sync: stable fixture id (league:season:home:away), league code, data source
+  externalId       String?
+  league           String?
+  source           String?
+
   postHocAnalysis  Boolean  @default(false)
   hasCaptainData   Boolean  @default(false)
   staleAnalysis    Boolean  @default(false)
@@ -104,6 +109,8 @@ model Match {
   @@index([kickoffGMT])
   @@index([status])
   @@index([teamAId, teamBId])
+  @@index([league])
+  @@index([externalId])
 }
 
 model MLModelVersion {

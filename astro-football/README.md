@@ -23,6 +23,7 @@ astro-football/
 │   ├── analyze/                 match-setup form → three-engine analysis
 │   ├── dataset/                 historical dataset browser, /new, /[id] (detail, edit, timeline), /[id]/chart
 │   ├── ml/                      ML training dashboard
+│   ├── sync/                    data sync: past seasons, upcoming fixtures, results
 │   ├── settings/                reference data, toggles, ML configuration, reference tables, admin mode
 │   └── api/                     chart, rao, chokoisky, frawley, stadium-lookup, tz, matches (+ export,
 │                                reanalyze, result), teams, venues (+ reverify), aliases, settings,
@@ -39,6 +40,8 @@ astro-football/
 │   ├── engines.py               Rao, Chokoisky, Frawley engines, sandhi guardrails, synthesis
 │   ├── reference.py             reference tables
 │   ├── ml_pipeline.py           feature extraction, combination discovery, training
+│   ├── sources.py               openfootball + football-data.org fixtures/results, Elo odds
+│   ├── teams.py                 club names, stadium coordinates, timezones
 │   ├── wikipedia_geo.py         Wikipedia → OpenStreetMap stadium lookup, timezone conversion
 │   └── main.py                  routes + APScheduler nightly retrain
 └── scripts/
@@ -115,15 +118,55 @@ npm run dev
 Open http://localhost:3000. The dashboard shows "Astrology service: online" when both are
 running. The Python service listens on port 8001 (`ASTRO_SERVICE_URL`).
 
-### Importing history (optional)
+## Data sync: past games, upcoming fixtures and results
+
+Open **Data sync** in the app.
+
+- **Past games:** choose leagues and seasons, then click **Import**. Finished matches with real
+  kickoff times come from openfootball (Premier League and Bundesliga from 2010-11, La Liga from
+  2012-13, Serie A from 2013-14, Ligue 1 and the Championship from 2014-15, Eredivisie and Primeira
+  Liga from 2018-19). They are stored as historical (post-hoc) records for the ML model. Matches
+  already in the dataset are skipped, so re-running is safe.
+- **Upcoming games & results:** **Refresh now** adds fixtures in the next 14 days as pending
+  matches, analysed straight away. It records the score of each pending match once it has
+  finished, moves rescheduled games (re-running their analysis), flags postponed ones, and adds
+  missing finished games from the last 45 days.
+  - The refresh also runs automatically every 6 hours while the app is running.
+  - The ML model retrains after any sync that adds results.
+  - Every setting is on the page, and every automatic change appears in the match's edit
+    timeline as `auto-sync`.
+- **Faster results:** openfootball is community-maintained and can be weeks behind. A free
+  football-data.org API key (pasted on the page) adds exact UTC kickoff times and results within
+  minutes of full time for the same leagues.
+- **Odds:** neither source has bookmaker odds, so each match gets odds derived from an Elo rating,
+  and its notes say so. You can edit the odds on any pending match; changing them offers to
+  re-run the analysis.
+- **Kickoff times:** a fixture without a published kickoff time is added on a later refresh, once
+  the time is known, because charts are cast for the kickoff minute.
+
+Downloaded seasons and looked-up stadiums are cached in `services/python-astro/cache/`.
+
+### Updating an existing installation
+
+After getting a newer version, run these in the `astro-football` folder. They add new database
+columns without touching your data, and install any new packages.
 
 ```bash
-.venv/bin/python scripts/import_history.py --data path/to/openfootball --from 2023-07-01
+npm install
 ```
 
-This reads openfootball `football.json` season files (with kickoff times) and posts each
-match through `POST /api/matches` as a historical, post-hoc record. That source has no
-bookmaker odds, so odds are derived from an Elo rating and each record's notes say so.
+```bash
+npx prisma db push
+```
+
+```bash
+.venv/bin/pip install -r services/python-astro/requirements.txt
+```
+
+On Windows the last command is `.venv\Scripts\pip install -r services\python-astro\requirements.txt`.
+
+`scripts/import_history.py` (command-line bulk import from downloaded files) still works; the
+Data sync page replaces it for most uses.
 
 ## How the spec is met
 

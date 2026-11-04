@@ -20,7 +20,7 @@ export async function GET(req: Request) {
         headers: { "content-type": "application/json", "content-disposition": `attachment; filename="astro-football-${stamp}.json"` },
       });
     }
-    const cols = ["id", "kickoffGMT", "kickoffLocal", "teamA", "teamB", "scoreA", "scoreB", "status", "sport", "context", "venue",
+    const cols = ["id", "kickoffGMT", "kickoffLocal", "teamA", "teamB", "scoreA", "scoreB", "status", "sport", "league", "context", "venue",
       "oddsA", "oddsB", "oddsDraw", "predicted", "actual", "agreement", "pattern", "confidence", "mlCount", "hasCaptainData",
       "postHoc", "stale", "notes"] as const;
     const lines = [cols.join(","), ...rows.map((r) => cols.map((c) => csvCell((r as any)[c])).join(","))];

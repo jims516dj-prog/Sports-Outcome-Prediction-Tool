@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { Alert, Badge, Button, Card, Spinner, pct } from "@/components/ui";
 import { ENGINE_META, api, fmtDate } from "@/lib/client";
 
+const LEAGUE_NAMES: Record<string, string> = {
+  "en.1": "Premier League", "de.1": "Bundesliga", "es.1": "La Liga", "it.1": "Serie A", "fr.1": "Ligue 1",
+  "en.2": "Championship", "nl.1": "Eredivisie", "pt.1": "Primeira Liga",
+};
+
 export function Home() {
   const [s, setS] = useState<any>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -37,6 +42,25 @@ export function Home() {
               </Card>
             ))}
           </div>
+          <Card>
+            <div className="px-4 py-2.5 border-b border-rule font-sans font-semibold text-sm flex justify-between">Upcoming matches <Link href="/sync" className="underline font-normal">Data sync →</Link></div>
+            <table className="w-full text-sm">
+              <tbody>
+                {s.upcoming.map((u: any) => {
+                  const pick = u.synthesis?.winner === "A" ? u.teamA.displayName : u.synthesis?.winner === "B" ? u.teamB.displayName : u.synthesis?.winner === "draw" ? "Draw" : "—";
+                  return (
+                    <tr key={u.id} className="border-b border-rule">
+                      <td className="px-4 py-1.5 num text-xs whitespace-nowrap">{fmtDate(u.kickoffGMT)} GMT</td>
+                      <td><Link className="hover:underline" href={`/dataset/${u.id}`}>{u.teamA.displayName} vs {u.teamB.displayName}</Link></td>
+                      <td className="text-xs text-slate-500">{LEAGUE_NAMES[u.league] ?? ""}</td>
+                      <td className="text-xs">astrology consensus: <strong>{pick}</strong>{u.synthesis?.confidence != null ? ` (${u.synthesis.confidence}%)` : ""}</td>
+                    </tr>
+                  );
+                })}
+                {s.upcoming.length === 0 ? <tr><td className="p-4 text-slate-500">No upcoming matches yet — open <Link className="underline" href="/sync">Data sync</Link> and click Refresh now.</td></tr> : null}
+              </tbody>
+            </table>
+          </Card>
           <Card>
             <div className="px-4 py-2.5 border-b border-rule font-sans font-semibold text-sm flex justify-between">Recently added <Link href="/dataset" className="underline font-normal">all matches →</Link></div>
             <table className="w-full text-sm">

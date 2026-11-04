@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type DatasetFilters = {
-  q?: string; from?: string; to?: string; sport?: string; status?: string;
+  q?: string; from?: string; to?: string; sport?: string; status?: string; league?: string;
   agreement?: "all3" | "two" | "none"; correct?: "correct" | "incorrect" | "pending";
   mlPattern?: "yes" | "no"; captain?: "yes" | "no"; showDeleted?: boolean;
   sort?: string; dir?: "asc" | "desc"; page?: number; pageSize?: number;
@@ -12,7 +12,7 @@ export type DatasetFilters = {
 export function parseFilters(sp: URLSearchParams, admin: boolean): DatasetFilters {
   const g = (k: string) => sp.get(k) || undefined;
   return {
-    q: g("q"), from: g("from"), to: g("to"), sport: g("sport"), status: g("status"),
+    q: g("q"), from: g("from"), to: g("to"), sport: g("sport"), status: g("status"), league: g("league"),
     agreement: g("agreement") as DatasetFilters["agreement"], correct: g("correct") as DatasetFilters["correct"],
     mlPattern: g("mlPattern") as DatasetFilters["mlPattern"], captain: g("captain") as DatasetFilters["captain"],
     showDeleted: admin && sp.get("showDeleted") === "1",
@@ -32,6 +32,7 @@ function where(f: DatasetFilters) {
   if (f.to) c.push(Prisma.sql`m."kickoffGMT" < ${new Date(new Date(f.to).getTime() + 86400000)}`);
   if (f.sport) c.push(Prisma.sql`m.sport = ${f.sport}`);
   if (f.status) c.push(Prisma.sql`m.status = ${f.status}`);
+  if (f.league) c.push(f.league === "none" ? Prisma.sql`m.league IS NULL` : Prisma.sql`m.league = ${f.league}`);
   if (f.agreement === "all3") c.push(Prisma.sql`(m.synthesis->>'agreement')::int = 3`);
   if (f.agreement === "two") c.push(Prisma.sql`(m.synthesis->>'agreement')::int = 2`);
   if (f.agreement === "none") c.push(Prisma.sql`(m.synthesis->>'agreement')::int <= 1`);
@@ -67,7 +68,7 @@ export async function listMatches(f: DatasetFilters, all = false) {
     JOIN "Venue" v ON v.id = m."venueId" ${w}`;
   const [rows, count] = await Promise.all([
     prisma.$queryRaw<DatasetRow[]>`SELECT m.id, m."kickoffGMT", m."kickoffLocal", ta."displayName" AS "teamA",
-        tb."displayName" AS "teamB", m."scoreA", m."scoreB", m.status, m.sport, m.context, v.name AS venue,
+        tb."displayName" AS "teamB", m."scoreA", m."scoreB", m.status, m.sport, m.context, m.league, v.name AS venue,
         m.synthesis->>'winner' AS predicted, ${ACTUAL} AS actual, (m.synthesis->>'agreement')::int AS agreement,
         m.synthesis->>'pattern' AS pattern,
         jsonb_array_length(coalesce(m."mlPatternMatches", '[]'::jsonb))::int AS "mlCount", m.notes,

@@ -22,6 +22,15 @@ export const DEFAULT_SETTINGS = {
     nightly: true,
     nightly_timezone: "UTC",
   },
+  sync: {
+    leagues: ["en.1", "de.1", "es.1", "it.1", "fr.1"] as string[],
+    auto: true,              // refresh upcoming games and results while the app runs
+    interval_hours: 6,
+    days_ahead: 14,          // add upcoming fixtures this far ahead
+    days_back: 45,           // add finished games not yet in the dataset from this far back
+    retrain_after: true,     // retrain the ML model when a sync adds results
+    api_key: "",             // optional football-data.org key (faster results, exact kickoff times)
+  },
   ayanamsha: { rao: "lahiri", chokoisky: "lahiri", chokoisky_sublords: "krishnamurti", frawley: "tropical" },
   sport_presets: {} as Record<string, unknown>,
 };

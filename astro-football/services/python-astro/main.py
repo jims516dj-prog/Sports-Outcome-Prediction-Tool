@@ -17,6 +17,7 @@ import chart as C
 import engines as EN
 import ml_pipeline as ML
 import reference as R
+import sources as SRC
 import wikipedia_geo as G
 from reference import COLOR_PLANET, NUMBER_PLANET, SPORT_PRESETS, reduce_digit, relation
 
@@ -207,6 +208,27 @@ def tz(lat: float, long: float, gmt: Optional[str] = None, local: Optional[str] 
 @app.get("/reference")
 def reference():
     return R.all_tables() | {"toggles_default": R.DEFAULT_TOGGLES, "colors": list(COLOR_PLANET)}
+
+
+class PlanIn(BaseModel):
+    mode: Literal["history", "refresh"]
+    leagues: list[str]
+    from_season: Optional[str] = None
+    to_season: Optional[str] = None
+    api_key: Optional[str] = None
+
+
+@app.get("/sources/leagues")
+def sources_leagues():
+    return SRC.leagues_info()
+
+
+@app.post("/sources/plan")
+def sources_plan(body: PlanIn):
+    try:
+        return SRC.plan(body.mode, body.leagues, body.from_season, body.to_season, body.api_key or None)
+    except Exception as e:
+        raise HTTPException(502, f"{type(e).__name__}: {e}")
 
 
 @app.post("/ml/train")
