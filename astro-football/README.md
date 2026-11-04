@@ -102,7 +102,11 @@ macOS / Linux, both services with one command (uses `.venv` automatically; Ctrl+
 npm run dev:all
 ```
 
-Windows, or to run them separately, use two terminals. First the Python service
+Windows: double-click **`start-app.bat`** in the `astro-football` folder. It opens two windows
+(the astrology service and the website) and then the app in your browser; close those two
+windows to stop the app. Tip: right-click the file → Send to → Desktop (create shortcut).
+
+To run them by hand instead, use two terminals. First the Python service
 (on Windows, `..\..\.venv\Scripts\python` instead):
 
 ```bash

@@ -1,0 +1,3 @@
+# keep Windows line endings byte-for-byte (GitHub ZIP downloads are not converted)
+*.bat -text
+*.sh text eol=lf
