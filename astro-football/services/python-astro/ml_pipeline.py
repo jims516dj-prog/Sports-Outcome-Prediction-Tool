@@ -22,6 +22,8 @@ import joblib
 import numpy as np
 import pandas as pd
 import psycopg
+
+import goals as GOALS
 from scipy.stats import chi2_contingency
 
 MODEL_DIR = os.environ.get("ML_MODEL_DIR", os.path.join(os.path.dirname(__file__), "models"))
@@ -343,7 +345,14 @@ def train(db_url: str, config: dict | None = None) -> dict:
                                     'actual, correct) VALUES (%s,%s,%s,%s,%s,%s)',
                                     [("cm_" + uuid.uuid4().hex[:20], c["id"], ids[i], preds[i], acts[i],
                                       bool(preds[i] == acts[i])) for i in np.flatnonzero(c["mask"])])
-        return summary | {"version": version, "combinationsDiscovered": len(combos_out),
+        # goal markets (over/under 2.5, both teams to score) - trained on the same dataset
+        try:
+            goals = GOALS.train(conn, version)
+        except Exception as e:  # never block the main retrain
+            goals = {"error": f"{type(e).__name__}: {e}"}
+        conn.execute('UPDATE "MLModelVersion" SET metrics = metrics || jsonb_build_object(\'goals\', %s::jsonb) '
+                     'WHERE id = %s', (json.dumps(goals, default=float), vid))
+        return summary | {"goals": goals, "version": version, "combinationsDiscovered": len(combos_out),
                           "overallAccuracy": engine_acc["consensus"], "engineAccuracies": engine_acc,
                           "engineWeights": engine_weights, "holdout": holdout, "coldStart": cold,
                           "milestone": ms}

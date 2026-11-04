@@ -17,7 +17,7 @@ export async function GET() {
       prisma.match.findMany({
         where: { deleted: false, status: "pending", kickoffGMT: { gte: new Date(Date.now() - 3 * 3600000) } },
         orderBy: { kickoffGMT: "asc" }, take: 12,
-        select: { id: true, kickoffGMT: true, kickoffLocal: true, league: true, synthesis: true,
+        select: { id: true, kickoffGMT: true, kickoffLocal: true, league: true, synthesis: true, goalsPrediction: true,
           teamA: { select: { displayName: true } }, teamB: { select: { displayName: true } } },
       }),
     ]);

@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 
 import chart as C
 import engines as EN
+import goals as GOALS
 import ml_pipeline as ML
 import reference as R
 import sources as SRC
@@ -237,6 +238,26 @@ def ml_train(config: dict | None = None):
         return ML.train(DB_URL, config or {})
     except Exception as e:
         raise HTTPException(500, f"{type(e).__name__}: {e}")
+
+
+class GoalsIn(BaseModel):
+    match_ids: Optional[list[str]] = None
+
+
+@app.post("/goals/predict")
+def goals_predict(body: GoalsIn):
+    """(Re)compute over/under 2.5 and BTTS predictions for the given pending matches (all when omitted)."""
+    import psycopg
+    try:
+        with psycopg.connect(DB_URL) as conn:
+            return {"updated": GOALS.predict_pending(conn, body.match_ids)}
+    except Exception as e:
+        raise HTTPException(500, f"{type(e).__name__}: {e}")
+
+
+@app.get("/goals/metrics")
+def goals_metrics():
+    return GOALS.metrics()
 
 
 @app.get("/ml/schedule")

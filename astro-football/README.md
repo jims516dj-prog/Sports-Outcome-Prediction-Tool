@@ -150,6 +150,39 @@ Open **Data sync** in the app.
 
 Downloaded seasons and looked-up stadiums are cached in `services/python-astro/cache/`.
 
+## Goal markets: over/under 2.5 and both teams to score
+
+Every football match gets two goal-market views, shown on its analysis page, in the
+dashboard's upcoming list, and evaluated on the ML Training page:
+
+- **Statistical model:** each team's recent scoring and conceding and a Poisson expected-goals
+  model, learned in kickoff order from every finished match in the dataset. It gives a
+  probability of over 2.5 goals and of both teams scoring.
+- **Astrology:** what the engines' synthesised "most likely" scoreline implies, for example
+  "2–1" means over 2.5 and both teams scoring.
+
+Retraining (button, nightly, or after a data sync that adds results) fits logistic-regression
+models on the older 75% of finished matches and scores them on the newest 25%. It compares:
+
+- statistics alone
+- statistics plus astrology features
+- astrology alone
+- the scoreline rule
+- the Poisson model alone
+- always picking the more common outcome
+
+The variant with the best held-out log-loss predicts upcoming matches, and picks above the
+confidence level that was right at least 65% of the time on held-out matches are marked strong.
+At least 300 finished matches are needed before training; until then predictions use the
+Poisson model alone.
+
+On 14,175 matches (five leagues, 2018–2026) the held-out results were:
+
+| Market | Always pick the more common outcome | Statistical model | Astrology scoreline | Effect of astrology features |
+|---|---|---|---|---|
+| Over/under 2.5 | 55.3% | 57.3% (66% on its strongest 12%) | 46.5% | slightly worse probabilities |
+| Both teams to score | 56.5% | 56.9% | 46.2% | no measurable effect |
+
 ### Updating an existing installation
 
 After getting a newer version, run these in the `astro-football` folder. They add new database

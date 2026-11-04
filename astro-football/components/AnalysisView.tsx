@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { ChartWheel, wheelFromChart } from "@/components/ChartWheel";
+import { GoalsCard } from "@/components/GoalsCard";
 import { Alert, Badge, Button, Card, pct } from "@/components/ui";
 import { ENGINE_META, api, fmtDate } from "@/lib/client";
 
@@ -138,6 +139,8 @@ export function AnalysisView({ match, combos, onReanalyzed }: { match: any; comb
           </div>
         </div>
       </Card>
+
+      <GoalsCard match={match} />
 
       {/* ---------- Engine cards ---------- */}
       <RaoCard rao={rao} match={match} nm={nm} winner={v.rao} onReanalyzed={onReanalyzed} />

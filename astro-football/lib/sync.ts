@@ -2,7 +2,7 @@
 // Fixtures come from the Python service (/sources/plan); every match is created through the same
 // createMatch / updateMatch path as a hand-entered one, so it is analysed, audited and versioned.
 import { astro } from "@/lib/astro";
-import { createMatch, updateMatch, type MatchInput } from "@/lib/dataset/crud";
+import { createMatch, predictGoals, updateMatch, type MatchInput } from "@/lib/dataset/crud";
 import { retrain } from "@/lib/ml/combination_discoverer";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
@@ -164,7 +164,7 @@ async function run(job: SyncJob, opts: { leagues?: string[]; fromSeason?: string
         notes: `${LEAGUE_NAMES[p.league] ?? p.league} ${p.season}${p.round ? `, ${p.round}` : ""}. From ${p.source}; odds derived from Elo ratings, not bookmaker odds.`,
         externalId: p.id, league: p.league, source: p.source,
       };
-      await createMatch(input, { historical: finished });
+      await createMatch(input, { historical: finished, skipGoals: true });
       job.created++;
     });
   }
@@ -195,6 +195,10 @@ async function run(job: SyncJob, opts: { leagues?: string[]; fromSeason?: string
     } catch (e: any) {
       job.warnings.push(`Retraining failed: ${e.message}`);
     }
+  }
+  if (!job.retrained && job.mode === "refresh" && job.created + job.rescheduled > 0) {
+    job.step = "Predicting goals for upcoming matches";   // retraining already does this
+    await predictGoals();
   }
   job.state = "done";
   job.step = "Finished";

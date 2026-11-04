@@ -54,9 +54,14 @@ export function Home() {
                       <td><Link className="hover:underline" href={`/dataset/${u.id}`}>{u.teamA.displayName} vs {u.teamB.displayName}</Link></td>
                       <td className="text-xs text-slate-500">{LEAGUE_NAMES[u.league] ?? ""}</td>
                       <td className="text-xs">astrology consensus: <strong>{pick}</strong>{u.synthesis?.confidence != null ? ` (${u.synthesis.confidence}%)` : ""}</td>
+                      <td className="text-xs whitespace-nowrap">{u.goalsPrediction ? <>
+                        <strong>{u.goalsPrediction.over25.pick ? "Over" : "Under"} 2.5</strong> {Math.round(100 * (u.goalsPrediction.over25.pick ? u.goalsPrediction.over25.p : 1 - u.goalsPrediction.over25.p))}%{u.goalsPrediction.over25.strong ? " ★" : ""}
+                        {" · "}BTTS <strong>{u.goalsPrediction.btts.pick ? "yes" : "no"}</strong> {Math.round(100 * (u.goalsPrediction.btts.pick ? u.goalsPrediction.btts.p : 1 - u.goalsPrediction.btts.p))}%{u.goalsPrediction.btts.strong ? " ★" : ""}
+                      </> : null}</td>
                     </tr>
                   );
                 })}
+                {s.upcoming.length ? <tr><td colSpan={5} className="px-4 py-1.5 font-sans text-[11px] text-slate-500">Goals picks from the statistical model; ★ = strong pick (held-out accuracy at least 65%).</td></tr> : null}
                 {s.upcoming.length === 0 ? <tr><td className="p-4 text-slate-500">No upcoming matches yet — open <Link className="underline" href="/sync">Data sync</Link> and click Refresh now.</td></tr> : null}
               </tbody>
             </table>

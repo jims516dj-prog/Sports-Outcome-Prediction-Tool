@@ -22,12 +22,14 @@ export function MlDashboard() {
   const [sort, setSort] = useState<SortKey>("weight");
   const [open, setOpen] = useState<Record<string, any>>({});
   const [rb, setRb] = useState("");
+  const [goals, setGoals] = useState<any>(null);
 
   const load = useCallback(async () => {
     try {
       const [m, w] = await Promise.all([api("/api/ml/metrics"), api("/api/ml/weights")]);
       setMetrics(m);
       setWeights(w);
+      api("/api/ml/goals").then((g) => setGoals(g.goals)).catch(() => setGoals(null));
       api("/api/ml/schedule").then(setSchedule).catch(() => setSchedule({ enabled: false, error: true }));
     } catch (e: any) {
       setError(e.message);
@@ -135,6 +137,8 @@ export function MlDashboard() {
           <p className="font-sans text-xs text-slate-500 mt-1">A pattern only carries information if it holds on matches it was not discovered from and beats the favourite baseline.</p>
         </Card>
       ) : null}
+
+      <GoalMarkets goals={goals} />
 
       <Card className="p-4">
         <h2 className="font-sans font-semibold">Accuracy by engine over time</h2>
@@ -249,6 +253,65 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
       <div className="label">{label}</div>
       <div className="text-2xl font-semibold num mt-1">{value}</div>
       {sub ? <div className="font-sans text-xs text-slate-500 mt-1">{sub}</div> : null}
+    </Card>
+  );
+}
+
+const METHOD_LABEL: Record<string, string> = {
+  always_more_common: "Always pick the more common outcome", poisson_only: "Poisson expected goals alone",
+  astrology_scoreline_rule: "Astrology: engines' most likely scoreline", statistics: "Statistical model",
+  statistics_plus_astrology: "Statistics + astrology features", astrology_only: "Astrology features alone",
+};
+
+function GoalMarkets({ goals }: { goals: any }) {
+  if (!goals) return null;
+  if (goals.error) return <Alert tone="red">Goal-market training failed: {goals.error}</Alert>;
+  if (goals.cold_start || !goals.markets) return <Alert tone="amber">Goal markets: {goals.message}</Alert>;
+  const mk = ["over25", "btts"] as const;
+  const ORDER = ["always_more_common", "poisson_only", "astrology_scoreline_rule", "astrology_only", "statistics", "statistics_plus_astrology"];
+  const methods = ORDER.filter((m) => m in goals.markets.over25.methods);
+  return (
+    <Card className="p-4" accent="#2a78d6">
+      <h2 className="font-sans font-semibold">Goal markets: over/under 2.5 and both teams to score</h2>
+      <p className="font-sans text-xs text-slate-500 mb-3">
+        Trained on the older {goals.markets.over25.n_train.toLocaleString()} finished football matches and scored on the newest {goals.markets.over25.n_test.toLocaleString()} they never saw.
+        The variant with the best held-out log-loss (lower = better probabilities) predicts upcoming matches.
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="label text-left border-b border-rule [&>th]:px-2">
+              <th className="py-1.5">Method</th><th>Over/under accuracy</th><th>log-loss</th><th>Both-teams-to-score accuracy</th><th>log-loss</th>
+            </tr>
+          </thead>
+          <tbody>
+            {methods.map((m) => (
+              <tr key={m} className="border-b border-rule [&>td]:px-2">
+                <td className="py-1.5">{METHOD_LABEL[m] ?? m} {mk.some((k) => goals.markets[k].chosen === m) ? <Badge tone="teal">used for predictions</Badge> : null}</td>
+                {mk.map((k) => (
+                  <Fragment key={k}>
+                    <td className={`num ${goals.markets[k].chosen === m ? "font-semibold" : ""}`}>{pct(goals.markets[k].methods[m].accuracy, 1)}</td>
+                    <td className="num text-xs">{goals.markets[k].methods[m].log_loss == null ? "—" : goals.markets[k].methods[m].log_loss.toFixed(4)}</td>
+                  </Fragment>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="grid md:grid-cols-2 gap-3 mt-3 font-sans text-xs text-slate-700">
+        {mk.map((k) => {
+          const g = goals.markets[k];
+          const e = g.astrology_effect;
+          const verdict = e.ci95[1] < 0 ? "improved the probabilities" : e.ci95[0] > 0 ? "made the probabilities worse" : "made no measurable difference";
+          return (
+            <div key={k}>
+              <strong>{g.label}</strong> happened in {pct(g.base_rate)} of the held-out matches. Adding astrology features {verdict} (log-loss change {e.log_loss_change > 0 ? "+" : ""}{e.log_loss_change.toFixed(4)}, 95% interval {e.ci95[0].toFixed(4)} to {e.ci95[1].toFixed(4)}).{" "}
+              {g.strong_pick ? <>Strong picks (confidence at least {pct(g.strong_pick.threshold)}) were right {pct(g.strong_pick.accuracy)} of the time, on {pct(g.strong_pick.coverage)} of matches.</> : <>No confidence level reached 65% accuracy, so no picks are marked strong.</>}
+            </div>
+          );
+        })}
+      </div>
     </Card>
   );
 }

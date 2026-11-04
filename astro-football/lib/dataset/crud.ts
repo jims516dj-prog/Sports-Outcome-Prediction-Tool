@@ -2,6 +2,7 @@
 // versions, mark result, soft delete (spec 9.3, 9.4, 12.7 - 12.11).
 import { Prisma } from "@prisma/client";
 import { analyzeMatch } from "@/lib/analysis";
+import { astro } from "@/lib/astro";
 import { prisma } from "@/lib/prisma";
 
 export type FoundingInput = {
@@ -74,7 +75,16 @@ function validate(i: MatchInput, historical: boolean) {
     throw new CrudError("A historical match needs the final scoreline");
 }
 
-export async function createMatch(i: MatchInput, opts: { historical: boolean }) {
+/** Over/under 2.5 + BTTS prediction for a pending match; best effort (never blocks saving). */
+export async function predictGoals(ids?: string[]) {
+  try {
+    await astro.goalsPredict(ids);
+  } catch (e) {
+    console.warn("goal prediction skipped:", (e as Error).message);
+  }
+}
+
+export async function createMatch(i: MatchInput, opts: { historical: boolean; skipGoals?: boolean }) {
   validate(i, opts.historical);
   const [teamA, teamB, venue] = await Promise.all([
     upsertTeam(i.teamA, i.foundingA, i.teamAType),
@@ -105,7 +115,12 @@ export async function createMatch(i: MatchInput, opts: { historical: boolean }) 
   });
   try {
     const { data } = await analyzeMatch(created, opts.historical ? "post-hoc analysis" : "initial analysis");
-    return prisma.match.update({ where: { id: created.id }, data, include: INCLUDE });
+    const saved = await prisma.match.update({ where: { id: created.id }, data, include: INCLUDE });
+    if (saved.status === "pending" && saved.sport === "football" && !opts.skipGoals) {
+      await predictGoals([saved.id]);
+      return prisma.match.findUniqueOrThrow({ where: { id: saved.id }, include: INCLUDE });
+    }
+    return saved;
   } catch (e) {
     await prisma.match.delete({ where: { id: created.id } });
     throw e;
@@ -115,7 +130,9 @@ export async function createMatch(i: MatchInput, opts: { historical: boolean }) 
 export async function reanalyze(id: string, reason = "re-analysis") {
   const m = await prisma.match.findUniqueOrThrow({ where: { id }, include: INCLUDE });
   const { data } = await analyzeMatch(m, reason);
-  return prisma.match.update({ where: { id }, data, include: INCLUDE });
+  const saved = await prisma.match.update({ where: { id }, data, include: INCLUDE });
+  if (saved.status === "pending" && saved.sport === "football") await predictGoals([id]);
+  return saved;
 }
 
 const str = (v: unknown) => (v === null || v === undefined ? null : v instanceof Date ? v.toISOString() : String(v));

@@ -44,5 +44,7 @@ export const astro = {
     body === undefined ? call<any>("/ml/schedule") : call<any>("/ml/schedule", { method: "POST", body: JSON.stringify(body) }),
   sourcesLeagues: () => call<any>("/sources/leagues", { timeoutMs: 10000 }),
   sourcesPlan: (body: unknown) => call<any>("/sources/plan", { method: "POST", body: JSON.stringify(body), timeoutMs: 900000 }),
+  goalsPredict: (matchIds?: string[]) =>
+    call<any>("/goals/predict", { method: "POST", body: JSON.stringify({ match_ids: matchIds ?? null }), timeoutMs: 120000 }),
   health: () => call<any>("/health", { timeoutMs: 3000 }),
 };

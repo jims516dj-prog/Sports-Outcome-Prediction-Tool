@@ -98,6 +98,7 @@ model Match {
   mlFeatures             Json?
   mlPatternMatches       Json?
   mlConfidenceMultiplier Float?
+  goalsPrediction  Json? // over/under 2.5 and both-teams-to-score prediction (pending matches)
 
   analysisVersions Json? // [{ timestamp, reason, verdicts, synthesis }]
   createdAt        DateTime @default(now())
